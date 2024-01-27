@@ -3,12 +3,13 @@ from ultralytics import YOLO
 import cvzone
 import math
 
-# for video camera
+# webcam source
 # cap = cv2.VideoCapture(0)
 # cap.set(3, 640)
 # cap.set(4, 480)
-# for video file
-cap = cv2.VideoCapture("./videos/intersection2.mp4")
+
+# video source
+cap = cv2.VideoCapture("resources/intersection.mp4")
 
 model = YOLO("yolo-weights/yolov8n.pt")
 
@@ -25,9 +26,12 @@ class_names = [
     "book", "clock", "vase", "scissors", "teddy bear", "hair dryer", "toothbrush"
 ]
 
+mask = cv2.imread("resources/mask.png")
+
 while True:
     success, img = cap.read()
-    results = model(img, stream=True)
+    img_region = cv2.bitwise_and(img, mask)
+    results = model(img_region, stream=True)
     for r in results:
         boxes = r.boxes
         for box in boxes:
@@ -37,14 +41,16 @@ while True:
             # cv2.rectangle(img, (x1, y1), (x2, y2), (255, 165, 0), 3)
             w, h = x2 - x1, y2 - y1
             bbox = int(x1), int(y1), int(w), int(h)
-            cvzone.cornerRect(img, bbox, rt=2, t=2, colorR=(235, 128, 52), colorC=(52, 122, 235))
+            # cvzone.cornerRect(img, bbox, l=15, rt=1, t=1, colorR=(235, 128, 52), colorC=(235, 128, 52))
             # confidence
             conf = math.ceil((box.conf[0] * 100)) / 100
-            print(conf)
             # class name
             cls = int(box.cls[0])
-            print(cls)
-            cvzone.putTextRect(img, f'{class_names[cls]} {conf}', (max(0, x1), max(30, y1)), scale=0.5,
-                               thickness=1, colorR=(52, 122, 235))
-    cv2.imshow("Image", img)
+            current_class = class_names[cls]
+            if (current_class == "car" or current_class == "truck" or current_class == "bus" or
+                    current_class == "motorbike" and conf > 0.3):
+                cvzone.cornerRect(img, bbox, l=15, rt=1, t=1, colorR=(235, 128, 52), colorC=(235, 128, 52))
+                cvzone.putTextRect(img, f'{current_class} {conf}', (max(0, x1), max(30, y1)), scale=0.7,
+                                   thickness=1, colorR=(235, 128, 52), offset=3)
+    cv2.imshow("Camera", img)
     cv2.waitKey(1)
