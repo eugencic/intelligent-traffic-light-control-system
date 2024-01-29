@@ -5,6 +5,8 @@ import math
 from sort import *
 import time
 from datetime import datetime
+import requests
+
 
 # webcam source
 # cap = cv2.VideoCapture(0)
@@ -130,6 +132,31 @@ while True:
             f"Vehicle count (road 3): {len([car for car in results_tracker if section3['x_min'] <= car[0] <= section3['x_max'] and section3['y_min'] <= car[1] <= section3['y_max']])}")
         print(f"Current date: {current_date}")
         print(f"Current time: {current_time}")
+
+        traffic_data = {
+            "date": current_date,
+            "time": current_time,
+            "traffic_info": {
+                "vehicle_count_road_1": len([car for car in results_tracker if
+                                             section1['x_min'] <= car[0] <= section1['x_max'] and section1['y_min'] <=
+                                             car[1] <= section1['y_max']]),
+                "vehicle_count_road_2": len([car for car in results_tracker if
+                                             section2['x_min'] <= car[0] <= section2['x_max'] and section2['y_min'] <=
+                                             car[1] <= section2['y_max']]),
+                "vehicle_count_road_3": len([car for car in results_tracker if
+                                             section3['x_min'] <= car[0] <= section3['x_max'] and section3['y_min'] <=
+                                             car[1] <= section3['y_max']])
+            }
+        }
+
+        url = ""
+
+        response = requests.post(url, json=traffic_data)
+
+        if response.status_code == 200:
+            print("Data successfully sent to the server.")
+        else:
+            print("Failed to send data. Status code:", response.status_code)
 
         # reset start_time
         start_time = time.time()
