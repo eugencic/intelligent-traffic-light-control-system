@@ -151,12 +151,12 @@ while True:
 
         url = ""
 
-        response = requests.post(url, json=traffic_data)
-
-        if response.status_code == 200:
-            print("Data successfully sent to the server.")
-        else:
-            print("Failed to send data. Status code:", response.status_code)
+        # response = requests.post(url, json=traffic_data)
+        #
+        # if response.status_code == 200:
+        #     print("Data successfully sent to the server.")
+        # else:
+        #     print("Failed to send data. Status code:", response.status_code)
 
         # reset start_time
         start_time = time.time()
