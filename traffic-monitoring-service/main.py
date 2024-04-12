@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 import requests
 
-
 # webcam source
 # cap = cv2.VideoCapture(0)
 # cap.set(3, 640)
@@ -45,7 +44,7 @@ section3 = {"x_min": 400, "y_min": 450, "x_max": 1150, "y_max": 710}  # road 3 c
 
 start_time = time.time()
 
-interval = 10 # information every 10 seconds
+interval = 10  # information every 10 seconds
 
 while True:
     success, img = cap.read()
@@ -120,6 +119,7 @@ while True:
 
     # check if it's time to print traffic information
     elapsed_time = time.time() - start_time
+    print(elapsed_time)
     if elapsed_time >= interval:
         current_date = datetime.now().strftime("%Y-%m-%d")
         current_time = datetime.now().strftime("%H:%M:%S")
