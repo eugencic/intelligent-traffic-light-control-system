@@ -1,0 +1,330 @@
+{
+	"info": {
+		"_postman_id": "8d4a0c3f-ef83-4f7f-8d86-520c49603a2e",
+		"name": "pad",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16262543"
+	},
+	"item": [
+		{
+			"name": "status",
+			"item": [
+				{
+					"name": "get_gateway_status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6060/get_gateway_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"get_gateway_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_service_discovery_status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6060/get_service_discovery_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"get_service_discovery_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_traffic_analytics_service_status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6060/get_traffic_analytics_service_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"get_traffic_analytics_service_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_traffic_regulation_service_status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6060/get_traffic_regulation_service_status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"get_traffic_regulation_service_status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "traffic_analytics",
+			"item": [
+				{
+					"name": "receive_data_for_analytics",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1,\r\n  \"signal_status_1\": 1,\r\n  \"vehicle_count\": 5,\r\n  \"incident\": true,\r\n  \"date\": \"2023-12-07\",\r\n  \"time\": \"07:11\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/receive_data_for_analytics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"receive_data_for_analytics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "today_statistics",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/today_statistics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"today_statistics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "last_week_statistics",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/last_week_statistics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"last_week_statistics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "next_week_predictions",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/next_week_predictions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"next_week_predictions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "traffic_regulation",
+			"item": [
+				{
+					"name": "receive_data_for_logs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1,\r\n  \"signal_status_1\": 1,\r\n  \"vehicle_count\": 31,\r\n  \"incident\": true,\r\n  \"date\": \"2023-12-07\",\r\n  \"time\": \"07:11\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/receive_data_for_logs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"receive_data_for_logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "today_control_logs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/today_control_logs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"today_control_logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "last_week_control_logs",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6060/last_week_control_logs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6060",
+							"path": [
+								"last_week_control_logs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "coordinator",
+			"item": [
+				{
+					"name": "add_data",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"intersection_id\": 1,\r\n  \"message\": \"Sample message\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:6061/add_data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6061",
+							"path": [
+								"add_data"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

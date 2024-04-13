@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package analytics;
+
+service TrafficAnalytics {
+  rpc ReceiveDataForAnalytics (TrafficDataForAnalytics) returns (TrafficDataForAnalyticsReceiveResponse);
+  rpc AddDataAnalytics (AddDataAnalyticsRequest) returns (AddDataAnalyticsResponse);
+  rpc DeleteDataAnalytics (DeleteDataAnalyticsRequest) returns (DeleteDataAnalyticsResponse);
+  rpc GetTodayStatistics (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse);
+  rpc GetLastWeekStatistics (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse);
+  rpc GetNextWeekPredictions (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse);
+  rpc TrafficAnalyticsServiceStatus (TrafficAnalyticsServiceStatusRequest) returns (TrafficAnalyticsServiceStatusResponse);
+}
+
+message TrafficDataForAnalytics {
+  int32 intersection_id = 1;
+  int32 signal_status_1 = 2;
+  int32 vehicle_count = 3;
+  bool incident = 4;
+  string date = 5;
+  string time = 6;
+}
+
+message TrafficDataForAnalyticsReceiveResponse {
+  string message = 1;
+}
+
+message IntersectionRequestForAnalytics {
+  int32 intersection_id = 1;
+}
+
+message TrafficAnalyticsResponse {
+  int32 intersection_id = 1;
+  string timestamp = 2;
+  double average_vehicle_count = 3;
+  string peak_hours = 4;
+  float average_incidents = 5;
+}
+
+message AddDataAnalyticsRequest {
+  int32 intersection_id = 1;
+  string message = 2;
+}
+
+message AddDataAnalyticsResponse {
+  string message = 1;
+}
+
+message DeleteDataAnalyticsRequest {
+  int32 intersection_id = 1;
+}
+
+message DeleteDataAnalyticsResponse {
+  string message = 1;
+}
+
+message TrafficAnalyticsServiceStatusRequest {
+}
+
+message TrafficAnalyticsServiceStatusResponse {
+  string message = 1;
+}

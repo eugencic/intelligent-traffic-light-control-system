@@ -121,42 +121,31 @@ while True:
     elapsed_time = time.time() - start_time
     print(elapsed_time)
     if elapsed_time >= interval:
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        current_time = datetime.now().strftime("%H:%M:%S")
-        print(f"\nTraffic information (Intersection nr.1)")
-        print(
-            f"Vehicle count (road 1): {len([car for car in results_tracker if section1['x_min'] <= car[0] <= section1['x_max'] and section1['y_min'] <= car[1] <= section1['y_max']])}")
-        print(
-            f"Vehicle count (road 2): {len([car for car in results_tracker if section2['x_min'] <= car[0] <= section2['x_max'] and section2['y_min'] <= car[1] <= section2['y_max']])}")
-        print(
-            f"Vehicle count (road 3): {len([car for car in results_tracker if section3['x_min'] <= car[0] <= section3['x_max'] and section3['y_min'] <= car[1] <= section3['y_max']])}")
-        print(f"Current date: {current_date}")
-        print(f"Current time: {current_time}")
+        current_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        traffic_data = [{
+                     "time": current_time,
+                     "vehicle_count": (len([car for car in results_tracker if
+                                            section1['x_min'] <= car[0] <= section1['x_max'] and
+                                            section1['y_min'] <= car[1] <= section1['y_max']]) +
+                                       len([car for car in results_tracker if
+                                            section2['x_min'] <= car[0] <= section2['x_max'] and
+                                            section2['y_min'] <= car[1] <= section2['y_max']]) +
+                                       len([car for car in results_tracker if
+                                            section3['x_min'] <= car[0] <= section3['x_max'] and
+                                            section3['y_min'] <= car[1] <= section3['y_max']])),
+                     "pedestrian_count": 5,
+                     "traffic_light_id": 1
+        }]
 
-        traffic_data = {
-            "date": current_date,
-            "time": current_time,
-            "traffic_info": {
-                "vehicle_count_road_1": len([car for car in results_tracker if
-                                             section1['x_min'] <= car[0] <= section1['x_max'] and section1['y_min'] <=
-                                             car[1] <= section1['y_max']]),
-                "vehicle_count_road_2": len([car for car in results_tracker if
-                                             section2['x_min'] <= car[0] <= section2['x_max'] and section2['y_min'] <=
-                                             car[1] <= section2['y_max']]),
-                "vehicle_count_road_3": len([car for car in results_tracker if
-                                             section3['x_min'] <= car[0] <= section3['x_max'] and section3['y_min'] <=
-                                             car[1] <= section3['y_max']])
-            }
-        }
+        print(traffic_data)
 
-        url = ""
+        url = "http://localhost:8000/add_new_data"
+        response = requests.post(url, json=traffic_data)
 
-        # response = requests.post(url, json=traffic_data)
-        #
-        # if response.status_code == 200:
-        #     print("Data successfully sent to the server.")
-        # else:
-        #     print("Failed to send data. Status code:", response.status_code)
+        if response.status_code == 200:
+            print("Data successfully sent to the server.")
+        else:
+            print("Failed to send data. Status code:", response.status_code)
 
         # reset start_time
         start_time = time.time()

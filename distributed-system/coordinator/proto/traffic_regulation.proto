@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package main;
+
+service TrafficRegulation {
+  rpc ReceiveDataForLogs (TrafficDataForLogs) returns (TrafficDataForLogsReceiveResponse);
+  rpc AddDataRegulation (AddDataRegulationRequest) returns (AddDataRegulationResponse);
+  rpc DeleteDataRegulation (DeleteDataRegulationRequest) returns (DeleteDataRegulationResponse);
+  rpc GetTodayControlLogs (IntersectionRequestForLogs) returns (TrafficRegulationResponse);
+  rpc GetLastWeekControlLogs (IntersectionRequestForLogs) returns (TrafficRegulationResponse);
+  rpc TrafficRegulationServiceStatus (TrafficRegulationServiceStatusRequest) returns (TrafficRegulationServiceStatusResponse);
+}
+
+message TrafficDataForLogs {
+  int32 intersection_id = 1;
+  int32 signal_status_1 = 2;
+  int32 vehicle_count = 3;
+  bool incident = 4;
+  string date = 5;
+  string time = 6;
+}
+
+message TrafficDataForLogsReceiveResponse {
+  string message = 1;
+}
+
+message IntersectionRequestForLogs {
+  int32 intersection_id = 1;
+}
+
+message TrafficRegulationResponse {
+  int32 intersection_id = 1;
+  repeated string logs = 2;
+}
+
+message AddDataRegulationRequest {
+  int32 intersection_id = 1;
+  string message = 2;
+}
+
+message AddDataRegulationResponse {
+  string message = 1;
+}
+
+message DeleteDataRegulationRequest {
+  int32 intersection_id = 1;
+}
+
+message DeleteDataRegulationResponse {
+  string message = 1;
+}
+
+message TrafficRegulationServiceStatusRequest {
+}
+
+message TrafficRegulationServiceStatusResponse {
+  string message = 1;
+}

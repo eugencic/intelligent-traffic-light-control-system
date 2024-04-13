@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package analytics;
+
+option go_package = ".";
+
+import "google/api/annotations.proto";
+
+service TrafficAnalytics {
+  rpc ReceiveDataForAnalytics (TrafficDataForAnalytics) returns (TrafficDataForAnalyticsReceiveResponse) {
+    option (google.api.http) = {
+      post: "/receive_data_for_analytics"
+      body: "*"
+    };
+  };
+  rpc GetTodayStatistics (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse) {
+    option (google.api.http) = {
+      post: "/today_statistics"
+      body: "*"
+    };
+  };
+  rpc GetLastWeekStatistics (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse) {
+    option (google.api.http) = {
+      post: "/last_week_statistics"
+      body: "*"
+    };
+  };
+  rpc GetNextWeekPredictions (IntersectionRequestForAnalytics) returns (TrafficAnalyticsResponse) {
+    option (google.api.http) = {
+      post: "/next_week_predictions"
+      body: "*"
+    };
+  };
+
+  rpc TrafficAnalyticsServiceStatus (TrafficAnalyticsServiceStatusRequest) returns (TrafficAnalyticsServiceStatusResponse) {
+    option (google.api.http) = {
+      get: "/get_traffic_analytics_service_status"
+    };
+  };
+}
+
+message TrafficDataForAnalytics {
+  int32 intersection_id = 1;
+  int32 signal_status_1 = 2;
+  int32 vehicle_count = 3;
+  bool incident = 4;
+  string date = 5;
+  string time = 6;
+}
+
+message TrafficDataForAnalyticsReceiveResponse {
+  string message = 1;
+}
+
+message IntersectionRequestForAnalytics {
+  int32 intersection_id = 1;
+}
+
+message TrafficAnalyticsResponse {
+  int32 intersection_id = 1;
+  string timestamp = 2;
+  double average_vehicle_count = 3;
+  string peak_hours = 4;
+  float average_incidents = 5;
+}
+
+message TrafficAnalyticsServiceStatusRequest {
+}
+
+message TrafficAnalyticsServiceStatusResponse {
+  string message = 1;
+}

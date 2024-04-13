@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package main;
+
+option go_package = ".";
+
+import "google/api/annotations.proto";
+
+service TrafficRegulation {
+  rpc ReceiveDataForLogs (TrafficDataForLogs) returns (TrafficDataForLogsReceiveResponse) {
+    option (google.api.http) = {
+      post: "/receive_data_for_logs"
+      body: "*"
+    };
+  };
+  rpc GetTodayControlLogs (IntersectionRequestForLogs) returns (TrafficRegulationResponse) {
+    option (google.api.http) = {
+      post: "/today_control_logs"
+      body: "*"
+    };
+  };
+  rpc GetLastWeekControlLogs (IntersectionRequestForLogs) returns (TrafficRegulationResponse) {
+    option (google.api.http) = {
+      post: "/last_week_control_logs"
+      body: "*"
+    };
+  };
+  rpc TrafficRegulationServiceStatus (TrafficRegulationServiceStatusRequest) returns (TrafficRegulationServiceStatusResponse) {
+    option (google.api.http) = {
+      get: "/get_traffic_regulation_service_status"
+    };
+  };
+}
+
+message TrafficDataForLogs {
+  int32 intersection_id = 1;
+  int32 signal_status_1 = 2;
+  int32 vehicle_count = 3;
+  bool incident = 4;
+  string date = 5;
+  string time = 6;
+}
+
+message TrafficDataForLogsReceiveResponse {
+  string message = 1;
+}
+
+message IntersectionRequestForLogs {
+  int32 intersection_id = 1;
+}
+
+message TrafficRegulationResponse {
+  int32 intersection_id = 1;
+  repeated string logs = 2;
+}
+
+message TrafficRegulationServiceStatusRequest {
+}
+
+message TrafficRegulationServiceStatusResponse {
+  string message = 1;
+}
