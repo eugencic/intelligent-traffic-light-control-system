@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  traffic-analytics-database:
+    container_name: traffic-analytics-database
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: 111111
+      POSTGRES_DB: traffic-analytics
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+#    networks:
+#      - mynetwork
