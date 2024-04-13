@@ -1,3 +1,4 @@
+import json
 import threading
 import psycopg2.pool
 from flask import Flask, jsonify, request
@@ -8,6 +9,7 @@ app = Flask(__name__)
 lock = threading.Lock()
 
 traffic_records_cache = []
+traffic_statistics_cache = {}
 
 drop_tables = """
 DROP TABLE IF EXISTS TrafficRecords;
@@ -180,8 +182,9 @@ print(df)
 
 
 def calculate_statistics(traffic_light_data):
-    global df, vehicle_count, pedestrian_count
+
     # Define thresholds for peak, light, and normal hours
+    global vehicle_count, pedestrian_count
     peak_vehicle_threshold = 30
     peak_pedestrian_threshold = 10
     normal_vehicle_threshold = 20
@@ -265,39 +268,104 @@ def calculate_statistics(traffic_light_data):
 
 
 def update_statistics():
-    global df
+    global df, traffic_statistics_cache
+
     threading.Timer(10, update_statistics).start()
+
     with lock:
-        # Group by traffic_light_id and calculate statistics
+        # Group traffic records by traffic_light_id and calculate statistics
         stats = df.groupby('traffic_light_id').apply(calculate_statistics)
-        print("Updated statistics:")
-        for idx, stat in stats.items():
-            print(f"Traffic Light ID {idx}:")
-            print(stat)
-            print()
+
+        # Update traffic_statistics_cache with the calculated statistics
+        traffic_statistics_cache.update(stats)
+        print(traffic_statistics_cache)
+        # Update TrafficStatistics table in the database with the new statistics
+        conn = get_connection_from_pool()
+        cursor = conn.cursor()
+
+        try:
+            for traffic_light_id, stat in stats.items():
+                # Retrieve existing statistics for the traffic light (if any)
+                cursor.execute(
+                    "SELECT id FROM TrafficStatistics WHERE traffic_light_id = %s;", (traffic_light_id,)
+                )
+                result = cursor.fetchone()
+
+                if result:
+                    # Update existing statistics
+                    cursor.execute(
+                        "UPDATE TrafficStatistics SET peak_hours_intervals = %s, normal_hours_intervals = %s, "
+                        "light_hours_intervals = %s, mean_vehicle_count = %s, mean_pedestrian_count = %s, "
+                        "time_min = %s, time_max = %s WHERE id = %s;",
+                        (
+                            json.dumps(stat['peak_hours_intervals']),
+                            json.dumps(stat['normal_hours_intervals']),
+                            json.dumps(stat['light_hours_intervals']),
+                            stat['mean_vehicle_count'],
+                            stat['mean_pedestrian_count'],
+                            stat['time_min'],
+                            stat['time_max'],
+                            result[0]  # Use the ID of the existing statistics record
+                        )
+                    )
+                else:
+                    # Insert new statistics
+                    cursor.execute(
+                        "INSERT INTO TrafficStatistics (traffic_light_id, peak_hours_intervals, normal_hours_intervals,"
+                        "light_hours_intervals, mean_vehicle_count, mean_pedestrian_count, time_min, time_max) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s);",
+                        (
+                            traffic_light_id,
+                            json.dumps(stat['peak_hours_intervals']),
+                            json.dumps(stat['normal_hours_intervals']),
+                            json.dumps(stat['light_hours_intervals']),
+                            stat['mean_vehicle_count'],
+                            stat['mean_pedestrian_count'],
+                            stat['time_min'],
+                            stat['time_max']
+                        )
+                    )
+
+            conn.commit()
+
+        except Exception as e:
+            conn.rollback()
+            print(f"Error updating statistics: {e}")
+
+        finally:
+            cursor.close()
+            return_connection_to_pool(conn)
 
 
-# Start the thread for updating statistics
-# update_statistics()
+# Start the thread for updating statistics periodically
+update_statistics()
 
+# @app.route('/statistics/<int:traffic_light_id>', methods=['GET'])
+# def statistics(traffic_light_id):
+#     with lock:
+#         # Filter data for the specified traffic light
+#         traffic_light_data = df[df['traffic_light_id'] == traffic_light_id]
+#
+#         # Check if there are records available for the specified traffic light ID
+#         if len(traffic_light_data) == 0:
+#             return jsonify(
+#                 {'message': f'No statistics available for traffic light {traffic_light_id}. Insufficient data.'})
+#
+#         # Calculate statistics
+#         stats = calculate_statistics(traffic_light_data)
+#
+#         # Return the statistics
+#         return jsonify(stats)
 
 @app.route('/statistics/<int:traffic_light_id>', methods=['GET'])
-def statistics(traffic_light_id):
+def get_statistics(traffic_light_id):
     with lock:
-        # Filter data for the specified traffic light
-        traffic_light_data = df[df['traffic_light_id'] == traffic_light_id]
-
-        # Check if there are records available for the specified traffic light ID
-        if len(traffic_light_data) == 0:
-            return jsonify(
-                {'message': f'No statistics available for traffic light {traffic_light_id}. Insufficient data.'})
-
-        # Calculate statistics
-        stats = calculate_statistics(traffic_light_data)
-
-        # Return the statistics
-        return jsonify(stats)
-
+        if traffic_light_id in traffic_statistics_cache:
+            # Retrieve statistics from cache
+            statistics = traffic_statistics_cache[traffic_light_id]
+            return jsonify(statistics)
+        else:
+            return jsonify({'message': f'Statistics not available for traffic light {traffic_light_id}'}), 404
 
 # @app.route('/add_data', methods=['POST'])
 # def add_data():
@@ -319,12 +387,12 @@ def add_data():
         for record in data:
             # Insert new data into the TrafficRecords table
             print(record)
-            # cursor.execute(
-            #     "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
-            #     "VALUES (%s, %s, %s, %s);",
-            #     (record['traffic_light_id'], record['time'], record['vehicle_count'], record['pedestrian_count'])
-            # )
-            # conn.commit()
+            cursor.execute(
+                "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
+                "VALUES (%s, %s, %s, %s);",
+                (record['traffic_light_id'], record['time'], record['vehicle_count'], record['pedestrian_count'])
+            )
+            conn.commit()
 
             # Update cache with the new record
             time_str = record['time']
