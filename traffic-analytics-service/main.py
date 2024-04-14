@@ -11,75 +11,12 @@ lock = threading.Lock()
 traffic_records_cache = []
 traffic_statistics_cache = {}
 
-drop_tables = """
-DROP TABLE IF EXISTS TrafficRecords;
-DROP TABLE IF EXISTS TrafficStatistics;
-DROP TABLE IF EXISTS TrafficLights;
-"""
-
-create_traffic_light_table = """
-CREATE TABLE IF NOT EXISTS TrafficLights (
-    id SERIAL PRIMARY KEY,
-    location VARCHAR(255)
-);
-"""
-
-create_traffic_records_table = """
-CREATE TABLE IF NOT EXISTS TrafficRecords (
-    id SERIAL PRIMARY KEY,
-    traffic_light_id INTEGER REFERENCES TrafficLights(id),
-    time TIMESTAMP,
-    vehicle_count INTEGER,
-    pedestrian_count INTEGER
-);
-"""
-
-create_traffic_statistics_table = """
-CREATE TABLE IF NOT EXISTS TrafficStatistics (
-    id SERIAL PRIMARY KEY,
-    traffic_light_id INTEGER REFERENCES TrafficLights(id),
-    peak_hours_intervals JSONB,
-    normal_hours_intervals JSONB,
-    light_hours_intervals JSONB,
-    mean_vehicle_count FLOAT,
-    mean_pedestrian_count FLOAT,
-    time_min TIMESTAMP,
-    time_max TIMESTAMP
-);
-"""
-
-try:
-    conn = psycopg2.connect(
-        dbname='traffic-analytics',
-        user='postgres',
-        password='111111',
-        # host='traffic-analytics',
-        host='localhost',
-        port='5433'
-    )
-    print("Connected to traffic analytics database.")
-    cursor = conn.cursor()
-    cursor.execute(drop_tables)
-    conn.commit()
-    cursor.execute(create_traffic_light_table)
-    conn.commit()
-    cursor.execute(create_traffic_records_table)
-    conn.commit()
-    cursor.execute(create_traffic_statistics_table)
-    conn.commit()
-    print("Tables created.")
-    cursor.close()
-    conn.close()
-except (Exception,) as e:
-    print(f"Error connecting to the traffic analytics database.")
-
 db_pool = psycopg2.pool.SimpleConnectionPool(
     minconn=1,
     maxconn=10,
     dbname='traffic-analytics',
     user='postgres',
     password='111111',
-    # host='traffic-analytics',
     host='localhost',
     port='5433'
 )
@@ -91,6 +28,69 @@ def get_connection_from_pool():
 
 def return_connection_to_pool(conn):
     db_pool.putconn(conn)
+
+
+def setup_database():
+    drop_tables = """
+        DROP TABLE IF EXISTS TrafficRecords;
+        DROP TABLE IF EXISTS TrafficStatistics;
+        DROP TABLE IF EXISTS TrafficLights;
+    """
+
+    create_traffic_light_table = """
+        CREATE TABLE IF NOT EXISTS TrafficLights (
+        id SERIAL PRIMARY KEY,
+        location VARCHAR(255)
+    );
+    """
+
+    create_traffic_records_table = """
+        CREATE TABLE IF NOT EXISTS TrafficRecords (
+        id SERIAL PRIMARY KEY,
+        traffic_light_id INTEGER REFERENCES TrafficLights(id),
+        time TIMESTAMP,
+        vehicle_count INTEGER,
+        pedestrian_count INTEGER
+    );
+    """
+
+    create_traffic_statistics_table = """
+        CREATE TABLE IF NOT EXISTS TrafficStatistics (
+        id SERIAL PRIMARY KEY,
+        traffic_light_id INTEGER REFERENCES TrafficLights(id),
+        peak_hours_intervals JSONB,
+        normal_hours_intervals JSONB,
+        light_hours_intervals JSONB,
+        mean_vehicle_count FLOAT,
+        mean_pedestrian_count FLOAT,
+        time_min TIMESTAMP,
+        time_max TIMESTAMP
+    );
+    """
+
+    try:
+        conn = psycopg2.connect(
+            dbname='traffic-analytics',
+            user='postgres',
+            password='111111',
+            host='localhost',
+            port='5433'
+        )
+        print("Connected to traffic analytics database.")
+        cursor = conn.cursor()
+        cursor.execute(drop_tables)
+        conn.commit()
+        cursor.execute(create_traffic_light_table)
+        conn.commit()
+        cursor.execute(create_traffic_records_table)
+        conn.commit()
+        cursor.execute(create_traffic_statistics_table)
+        conn.commit()
+        print("Tables created.")
+        cursor.close()
+        conn.close()
+    except (Exception,) as e:
+        print(f"Error connecting to the traffic analytics database.")
 
 
 def insert_sample_data():
@@ -115,23 +115,25 @@ def insert_sample_data():
         {"time": "2024-03-16T09:30:00", "vehicle_count": 40, "pedestrian_count": 15, "traffic_light_id": 2},
     ]
 
-    for light in sample_traffic_lights:
-        cursor.execute("INSERT INTO TrafficLights (location) VALUES (%s) RETURNING id;", (light['location'],))
-        traffic_light_id = cursor.fetchone()[0]
-        for record in sample_traffic_records:
-            if record['traffic_light_id'] == traffic_light_id:
-                cursor.execute(
-                    "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
-                    "VALUES (%s, %s, %s, %s);",
-                    (traffic_light_id, record['time'], record['vehicle_count'], record['pedestrian_count'])
-                )
-
-    conn.commit()
-    cursor.close()
-    return_connection_to_pool(conn)
-
-
-insert_sample_data()
+    try:
+        for light in sample_traffic_lights:
+            cursor.execute("INSERT INTO TrafficLights (location) VALUES (%s) RETURNING id;", (light['location'],))
+            traffic_light_id = cursor.fetchone()[0]
+            for record in sample_traffic_records:
+                if record['traffic_light_id'] == traffic_light_id:
+                    cursor.execute(
+                        "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
+                        "VALUES (%s, %s, %s, %s);",
+                        (traffic_light_id, record['time'], record['vehicle_count'], record['pedestrian_count'])
+                    )
+        conn.commit()
+        print("Sample data inserted into the database.")
+    except (Exception,) as e:
+        conn.rollback()
+        print(f"Error inserting sample data: {e}")
+    finally:
+        cursor.close()
+        return_connection_to_pool(conn)
 
 
 def update_cache():
@@ -260,14 +262,12 @@ def update_statistics():
 
         try:
             for traffic_light_id, stat in stats.items():
-                # Retrieve existing statistics for the traffic light (if any)
                 cursor.execute(
                     "SELECT id FROM TrafficStatistics WHERE traffic_light_id = %s;", (traffic_light_id,)
                 )
                 result = cursor.fetchone()
 
                 if result:
-                    # Update existing statistics
                     cursor.execute(
                         "UPDATE TrafficStatistics SET peak_hours_intervals = %s, normal_hours_intervals = %s, "
                         "light_hours_intervals = %s, mean_vehicle_count = %s, mean_pedestrian_count = %s, "
@@ -280,11 +280,10 @@ def update_statistics():
                             stat['mean_pedestrian_count'],
                             stat['time_min'],
                             stat['time_max'],
-                            result[0]  # Use the ID of the existing statistics record
+                            result[0]
                         )
                     )
                 else:
-                    # Insert new statistics
                     cursor.execute(
                         "INSERT INTO TrafficStatistics (traffic_light_id, peak_hours_intervals, normal_hours_intervals,"
                         "light_hours_intervals, mean_vehicle_count, mean_pedestrian_count, time_min, time_max) "
@@ -345,11 +344,13 @@ def add__new_data():
                 "pedestrian_count": record['pedestrian_count'],
                 "traffic_light_id": record['traffic_light_id']
             }
-            traffic_records_cache.append(traffic_record)
+            with lock:
+                traffic_records_cache.append(traffic_record)
 
         global df
-        new_data = pd.DataFrame(data, index=range(len(data)))
-        df = pd.concat([df, new_data], ignore_index=True)
+        with lock:
+            new_data = pd.DataFrame(data, index=range(len(data)))
+            df = pd.concat([df, new_data], ignore_index=True)
 
         return jsonify({'message': 'Data added successfully'}), 200
     except (Exception,) as e:
@@ -362,4 +363,6 @@ def add__new_data():
 
 
 if __name__ == '__main__':
+    setup_database()
+    insert_sample_data()
     app.run(host="0.0.0.0", port=8000, debug=True)
