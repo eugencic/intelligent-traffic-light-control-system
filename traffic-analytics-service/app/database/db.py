@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+import random
 import psycopg2
 import psycopg2.pool
 
@@ -76,27 +78,48 @@ def setup_database():
         print(f"Error setting up database: {e}")
 
 
+sample_traffic_lights = [
+    {"location": "Intersection 1"},
+    {"location": "Intersection 2"}
+]
+
+sample_traffic_records = []
+
+
+def generate_mockup_data():
+    num_intersections = len(sample_traffic_lights)
+    rows_per_intersection = 20
+
+    current_date = datetime.today().date()
+
+    start_time = datetime.combine(current_date, datetime.min.time())
+    end_time = datetime.combine(current_date, datetime.max.time())
+    time_diff_seconds = (end_time - start_time).total_seconds()
+
+    try:
+        for intersection_id in range(1, num_intersections + 1):
+            for _ in range(rows_per_intersection):
+                random_seconds = random.randint(0, int(time_diff_seconds))
+                random_time = start_time + timedelta(seconds=random_seconds)
+
+                vehicle_count = random.randint(5, 50)
+                pedestrian_count = random.randint(1, 20)
+
+                sample_traffic_records.append({
+                    "traffic_light_id": intersection_id,
+                    "time": random_time,
+                    "vehicle_count": vehicle_count,
+                    "pedestrian_count": pedestrian_count
+                })
+
+        print("Mockup data generation completed.")
+    except Exception as e:
+        print(f"Error generating mockup data: {e}")
+
+
 def insert_sample_data():
     conn = get_connection_from_pool()
     cursor = conn.cursor()
-
-    sample_traffic_lights = [
-        {"location": "Intersection 1"},
-        {"location": "Intersection 2"}
-    ]
-
-    sample_traffic_records = [
-        {"time": "2024-03-16T08:00:00", "vehicle_count": 10, "pedestrian_count": 5, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:10:00", "vehicle_count": 15, "pedestrian_count": 7, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:20:00", "vehicle_count": 12, "pedestrian_count": 4, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:30:00", "vehicle_count": 18, "pedestrian_count": 9, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:40:00", "vehicle_count": 20, "pedestrian_count": 6, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:50:00", "vehicle_count": 22, "pedestrian_count": 8, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:00:00", "vehicle_count": 30, "pedestrian_count": 10, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:10:00", "vehicle_count": 35, "pedestrian_count": 12, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:20:00", "vehicle_count": 25, "pedestrian_count": 5, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:30:00", "vehicle_count": 40, "pedestrian_count": 15, "traffic_light_id": 2},
-    ]
 
     try:
         for light in sample_traffic_lights:

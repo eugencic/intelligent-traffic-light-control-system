@@ -82,6 +82,7 @@ def predict_vehicle(traffic_light_id):
 
 if __name__ == '__main__':
     setup_database()
+    generate_mockup_data()
     insert_sample_data()
     update_cache()
     init_frame()
