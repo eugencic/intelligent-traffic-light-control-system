@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 
-from app.business.logic import *
+from app.core import *
 from app.database.db import *
 
 app = Flask(__name__)
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     df = return_frame()
     train_models_by_intersection(df)
     update_models()
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=False)
