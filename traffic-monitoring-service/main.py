@@ -81,7 +81,7 @@ while True:
             cls = int(box.cls[0])
             current_class = class_names[cls]
             if (current_class == "car" or current_class == "truck" or current_class == "bus" or
-                    current_class == "motorbike" and conf > 0.3):
+                    current_class == "motorbike" and conf > 0.1):
                 # cvzone.cornerRect(img, bbox, l=15, rt=1, t=1, colorR=(255, 165, 0), colorC=(255, 165, 0))
                 # cvzone.putTextRect(img, f'{current_class} {conf}', (max(0, x1), max(30, y1)), scale=0.7,
                 #                    thickness=1, colorR=(255, 165, 0), offset=3)
@@ -123,23 +123,30 @@ while True:
     if elapsed_time >= interval:
         current_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         traffic_data = [{
-                     "time": current_time,
-                     "vehicle_count": (len([car for car in results_tracker if
-                                            section1['x_min'] <= car[0] <= section1['x_max'] and
-                                            section1['y_min'] <= car[1] <= section1['y_max']]) +
-                                       len([car for car in results_tracker if
-                                            section2['x_min'] <= car[0] <= section2['x_max'] and
-                                            section2['y_min'] <= car[1] <= section2['y_max']]) +
-                                       len([car for car in results_tracker if
-                                            section3['x_min'] <= car[0] <= section3['x_max'] and
-                                            section3['y_min'] <= car[1] <= section3['y_max']])),
-                     "pedestrian_count": 5,
-                     "traffic_light_id": 1
+            "time": current_time,
+            "vehicle_count": (len([car for car in results_tracker if
+                                   section1['x_min'] <= car[0] <= section1['x_max'] and
+                                   section1['y_min'] <= car[1] <= section1['y_max']]) +
+                              len([car for car in results_tracker if
+                                   section3['x_min'] <= car[0] <= section3['x_max'] and
+                                   section3['y_min'] <= car[1] <= section3['y_max']])),
+            "pedestrian_count": len([car for car in results_tracker if
+                                     section2['x_min'] <= car[0] <= section2['x_max'] and
+                                     section2['y_min'] <= car[1] <= section2['y_max']]),
+            "traffic_light_id": 1
         }]
 
         print(traffic_data)
 
         url = "http://localhost:8000/add_new_data"
+        response = requests.post(url, json=traffic_data)
+
+        if response.status_code == 200:
+            print("Data successfully sent to the server.")
+        else:
+            print("Failed to send data. Status code:", response.status_code)
+
+        url = "http://localhost:7000/update_traffic_data"
         response = requests.post(url, json=traffic_data)
 
         if response.status_code == 200:
