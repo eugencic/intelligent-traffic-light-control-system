@@ -23,6 +23,6 @@
 - Get predictions of a traffic intersection on a specified time:
 
   ```
-  GET "http://localhost:8000/get_predictions/1?hour=14&minute=40"
+  GET "http://localhost:8000/get_predictions/1?hour=12&minute=10"
   ```
   
