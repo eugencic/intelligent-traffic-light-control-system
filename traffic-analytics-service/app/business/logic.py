@@ -1,143 +1,26 @@
-import json
-import threading
-import psycopg2.pool
-from flask import Flask, jsonify, request
-import pandas as pd
 from datetime import datetime
+import json
+import numpy as np
+import pandas as pd
+import psycopg2
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import threading
 
-app = Flask(__name__)
+from app.database.db import get_connection_from_pool, return_connection_to_pool
+
 lock = threading.Lock()
 
 traffic_records_cache = []
 traffic_statistics_cache = {}
+models_by_intersection = {}
 
-db_pool = psycopg2.pool.SimpleConnectionPool(
-    minconn=1,
-    maxconn=10,
-    dbname='traffic-analytics',
-    user='postgres',
-    password='111111',
-    host='localhost',
-    port='5433'
-)
-
-
-def get_connection_from_pool():
-    return db_pool.getconn()
-
-
-def return_connection_to_pool(conn):
-    db_pool.putconn(conn)
-
-
-def setup_database():
-    drop_tables = """
-        DROP TABLE IF EXISTS TrafficRecords;
-        DROP TABLE IF EXISTS TrafficStatistics;
-        DROP TABLE IF EXISTS TrafficLights;
-    """
-
-    create_traffic_light_table = """
-        CREATE TABLE IF NOT EXISTS TrafficLights (
-        id SERIAL PRIMARY KEY,
-        location VARCHAR(255)
-    );
-    """
-
-    create_traffic_records_table = """
-        CREATE TABLE IF NOT EXISTS TrafficRecords (
-        id SERIAL PRIMARY KEY,
-        traffic_light_id INTEGER REFERENCES TrafficLights(id),
-        time TIMESTAMP,
-        vehicle_count INTEGER,
-        pedestrian_count INTEGER
-    );
-    """
-
-    create_traffic_statistics_table = """
-        CREATE TABLE IF NOT EXISTS TrafficStatistics (
-        id SERIAL PRIMARY KEY,
-        traffic_light_id INTEGER REFERENCES TrafficLights(id),
-        peak_hours_intervals JSONB,
-        normal_hours_intervals JSONB,
-        light_hours_intervals JSONB,
-        mean_vehicle_count FLOAT,
-        mean_pedestrian_count FLOAT,
-        time_min TIMESTAMP,
-        time_max TIMESTAMP
-    );
-    """
-
-    try:
-        conn = psycopg2.connect(
-            dbname='traffic-analytics',
-            user='postgres',
-            password='111111',
-            host='localhost',
-            port='5433'
-        )
-        print("Connected to traffic analytics database.")
-        cursor = conn.cursor()
-        cursor.execute(drop_tables)
-        conn.commit()
-        cursor.execute(create_traffic_light_table)
-        conn.commit()
-        cursor.execute(create_traffic_records_table)
-        conn.commit()
-        cursor.execute(create_traffic_statistics_table)
-        conn.commit()
-        print("Tables created.")
-        cursor.close()
-        conn.close()
-    except (Exception,) as e:
-        print(f"Error connecting to the traffic analytics database.")
-
-
-def insert_sample_data():
-    conn = get_connection_from_pool()
-    cursor = conn.cursor()
-
-    sample_traffic_lights = [
-        {"location": "Intersection 1"},
-        {"location": "Intersection 2"}
-    ]
-
-    sample_traffic_records = [
-        {"time": "2024-03-16T08:00:00", "vehicle_count": 10, "pedestrian_count": 5, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:10:00", "vehicle_count": 15, "pedestrian_count": 7, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:20:00", "vehicle_count": 12, "pedestrian_count": 4, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:30:00", "vehicle_count": 18, "pedestrian_count": 9, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:40:00", "vehicle_count": 20, "pedestrian_count": 6, "traffic_light_id": 1},
-        {"time": "2024-03-16T08:50:00", "vehicle_count": 22, "pedestrian_count": 8, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:00:00", "vehicle_count": 30, "pedestrian_count": 10, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:10:00", "vehicle_count": 35, "pedestrian_count": 12, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:20:00", "vehicle_count": 25, "pedestrian_count": 5, "traffic_light_id": 2},
-        {"time": "2024-03-16T09:30:00", "vehicle_count": 40, "pedestrian_count": 15, "traffic_light_id": 2},
-    ]
-
-    try:
-        for light in sample_traffic_lights:
-            cursor.execute("INSERT INTO TrafficLights (location) VALUES (%s) RETURNING id;", (light['location'],))
-            traffic_light_id = cursor.fetchone()[0]
-            for record in sample_traffic_records:
-                if record['traffic_light_id'] == traffic_light_id:
-                    cursor.execute(
-                        "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
-                        "VALUES (%s, %s, %s, %s);",
-                        (traffic_light_id, record['time'], record['vehicle_count'], record['pedestrian_count'])
-                    )
-        conn.commit()
-        print("Sample data inserted into the database.")
-    except (Exception,) as e:
-        conn.rollback()
-        print(f"Error inserting sample data: {e}")
-    finally:
-        cursor.close()
-        return_connection_to_pool(conn)
+df = pd.DataFrame()
 
 
 def update_cache():
     global traffic_records_cache
+
     conn = get_connection_from_pool()
     cursor = conn.cursor()
 
@@ -164,15 +47,25 @@ def update_cache():
 
     except psycopg2.Error as e:
         print(f"Error fetching traffic records: {e}")
-
     finally:
         cursor.close()
         return_connection_to_pool(conn)
 
 
-update_cache()
+def init_frame():
+    global df
+    df = pd.DataFrame(traffic_records_cache)
 
-df = pd.DataFrame(traffic_records_cache)
+
+def update_frame(data):
+    global df
+    new_data = pd.DataFrame(data, index=range(len(data)))
+    df = pd.concat([df, new_data], ignore_index=True)
+
+
+def return_frame():
+    global df
+    return df
 
 
 def calculate_statistics(traffic_light_data):
@@ -309,60 +202,59 @@ def update_statistics():
             return_connection_to_pool(conn)
 
 
-update_statistics()
+def extract_hour_minute(df):
+    df_copy = df.copy()
+
+    df_copy['time'] = pd.to_datetime(df_copy['time'])
+
+    df_copy['hour'] = df_copy['time'].dt.hour
+    df_copy['minute'] = df_copy['time'].dt.minute
+
+    return df_copy
 
 
-@app.route('/get_statistics/<int:traffic_light_id>', methods=['GET'])
-def get_statistics(traffic_light_id):
+def train_models_by_intersection(df):
+    models = {}
+
+    df_copy = extract_hour_minute(df)
+
+    grouped_data = df_copy.groupby('traffic_light_id')
+
+    for traffic_light_id, data in grouped_data:
+        X = data[['hour', 'minute']].values
+        y = data['vehicle_count'].values
+
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+
+        models[traffic_light_id] = model
+
+    return models
+
+
+def update_models():
+    global models_by_intersection, df
+
+    new_models = train_models_by_intersection(df)
+
     with lock:
-        if traffic_light_id in traffic_statistics_cache:
-            statistics = traffic_statistics_cache[traffic_light_id]
-            return jsonify(statistics)
-        else:
-            return jsonify({'message': f'Statistics not available for traffic light {traffic_light_id}'}), 404
+        models_by_intersection = new_models
+
+    threading.Timer(20, update_models).start()
 
 
-@app.route('/add_new_data', methods=['POST'])
-def add__new_data():
-    data = request.json
-    conn = get_connection_from_pool()
-    cursor = conn.cursor()
+def predict_vehicle_count(hour, minute, traffic_light_id):
+    global models_by_intersection
 
-    try:
-        for record in data:
-            cursor.execute(
-                "INSERT INTO TrafficRecords (traffic_light_id, time, vehicle_count, pedestrian_count) "
-                "VALUES (%s, %s, %s, %s);",
-                (record['traffic_light_id'], record['time'], record['vehicle_count'], record['pedestrian_count'])
-            )
-            conn.commit()
+    model = models_by_intersection.get(traffic_light_id)
 
-            time_str = record['time']
-            traffic_record = {
-                "time": time_str,
-                "vehicle_count": record['vehicle_count'],
-                "pedestrian_count": record['pedestrian_count'],
-                "traffic_light_id": record['traffic_light_id']
-            }
-            with lock:
-                traffic_records_cache.append(traffic_record)
+    if model is None:
+        return None
 
-        global df
-        with lock:
-            new_data = pd.DataFrame(data, index=range(len(data)))
-            df = pd.concat([df, new_data], ignore_index=True)
+    X_pred = np.array([[hour, minute]])
 
-        return jsonify({'message': 'Data added successfully'}), 200
-    except (Exception,) as e:
-        conn.rollback()
-        return jsonify({'error': f'Failed to add data: {str(e)}'}), 500
+    predicted_count = model.predict(X_pred)
 
-    finally:
-        cursor.close()
-        return_connection_to_pool(conn)
-
-
-if __name__ == '__main__':
-    setup_database()
-    insert_sample_data()
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    return predicted_count[0]
