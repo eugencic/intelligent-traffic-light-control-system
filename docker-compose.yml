@@ -14,5 +14,18 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+  traffic-regulation-database:
+    container_name: traffic-regulation-database
+    image: postgres:latest
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_PASSWORD: 111111
+      POSTGRES_DB: traffic-regulation
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 #    networks:
 #      - mynetwork
