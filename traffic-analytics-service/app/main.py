@@ -97,5 +97,5 @@ def start_background_threads():
 
 if __name__ == '__main__':
     start_background_threads()
-    print("Starting Traffic Analytics Server...")
+    print("Server is listening on port 8000...")
     app.run(host="0.0.0.0", port=8000, debug=False)
