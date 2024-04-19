@@ -1,11 +1,12 @@
-import cv2
-from ultralytics import YOLO
 import cvzone
+import cv2
+from datetime import datetime
 import math
+import requests
 from sort import *
 import time
-from datetime import datetime
-import requests
+from ultralytics import YOLO
+
 
 # webcam source
 # cap = cv2.VideoCapture(0)
@@ -44,7 +45,7 @@ section3 = {"x_min": 400, "y_min": 450, "x_max": 1150, "y_max": 710}  # road 3 c
 
 start_time = time.time()
 
-interval = 10  # information every 10 seconds
+interval = 20  # information every 10 seconds
 
 while True:
     success, img = cap.read()
@@ -138,23 +139,30 @@ while True:
 
         print(traffic_data)
 
-        url = "http://localhost:8000/add_traffic_record"
-        response = requests.post(url, json=traffic_data)
+        try:
+            url = "http://localhost:8000/add_traffic_record"
+            response = requests.post(url, json=traffic_data)
 
-        if response.status_code == 200:
-            print("Data successfully sent to the server1.")
-        else:
-            print("Failed to send data. Status code:", response.status_code)
+            if response.status_code == 200:
+                print("Data successfully sent to Traffic Analytics Server")
+            else:
+                print("Failed to send data to Traffic Analytics Server. Status code:", response.status_code)
 
-        url = "http://localhost:7000/add_traffic_record"
-        response = requests.post(url, json=traffic_data)
+        except requests.exceptions.RequestException as e:
+            print("Error occurred while sending data to Traffic Analytics Server:", e)
 
-        if response.status_code == 200:
-            print("Data successfully sent to the server1.")
-        else:
-            print("Failed to send data. Status code:", response.status_code)
+        try:
+            url = "http://localhost:7000/add_traffic_record"
+            response = requests.post(url, json=traffic_data)
 
-        # reset start_time
+            if response.status_code == 200:
+                print("Data successfully sent to the Traffic Regulation Server")
+            else:
+                print("Failed to send data to Traffic Regulation Server. Status code:", response.status_code)
+
+        except requests.exceptions.RequestException as e:
+            print("Error occurred while sending data to Traffic Regulation Server:", e)
+
         start_time = time.time()
 
     key = cv2.waitKey(1)
