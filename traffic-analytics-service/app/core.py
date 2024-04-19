@@ -1,4 +1,3 @@
-from datetime import datetime
 import json
 import numpy as np
 import pandas as pd
@@ -69,71 +68,61 @@ def return_frame():
 
 
 def calculate_statistics(traffic_light_data):
-    peak_vehicle_threshold = 30
+    peak_vehicle_threshold = 20
     peak_pedestrian_threshold = 10
-    normal_vehicle_threshold = 20
+    normal_vehicle_threshold = 10
     normal_pedestrian_threshold = 5
 
+    traffic_light_data.sort_values(by='time', inplace=True)
+    traffic_light_data['time'] = pd.to_datetime(traffic_light_data['time'])
+
     peak_hours_intervals = []
-    light_hours_intervals = []
     normal_hours_intervals = []
+    light_hours_intervals = []
 
     total_vehicle_count = 0
     total_pedestrian_count = 0
 
-    current_interval_start = None
-    current_interval_end = None
-
-    for index, row in traffic_light_data.iterrows():
+    for i in range(len(traffic_light_data)):
+        row = traffic_light_data.iloc[i]
         vehicle_count = row['vehicle_count']
         pedestrian_count = row['pedestrian_count']
-        current_time = datetime.strptime(row['time'], '%Y-%m-%dT%H:%M:%S')
+        current_time = row['time']
 
         total_vehicle_count += vehicle_count
         total_pedestrian_count += pedestrian_count
 
         if vehicle_count >= peak_vehicle_threshold or pedestrian_count >= peak_pedestrian_threshold:
-            if current_interval_start is None:
-                current_interval_start = current_time
-            current_interval_end = current_time
+            current_interval = peak_hours_intervals
         elif vehicle_count >= normal_vehicle_threshold or pedestrian_count >= normal_pedestrian_threshold:
-            if current_interval_start is None:
-                current_interval_start = current_time
-            current_interval_end = current_time
+            current_interval = normal_hours_intervals
         else:
-            if current_interval_start is not None:
-                interval_range = (current_interval_start, current_interval_end)
-                if vehicle_count >= peak_vehicle_threshold or pedestrian_count >= peak_pedestrian_threshold:
-                    peak_hours_intervals.append(interval_range)
-                elif vehicle_count >= normal_vehicle_threshold or pedestrian_count >= normal_pedestrian_threshold:
-                    normal_hours_intervals.append(interval_range)
-                else:
-                    light_hours_intervals.append(interval_range)
-                current_interval_start = None
-                current_interval_end = None
+            current_interval = light_hours_intervals
 
-    if current_interval_start is not None:
-        interval_range = (current_interval_start, current_interval_end)
-        if vehicle_count >= peak_vehicle_threshold or pedestrian_count >= peak_pedestrian_threshold:
-            peak_hours_intervals.append(interval_range)
-        elif vehicle_count >= normal_vehicle_threshold or pedestrian_count >= normal_pedestrian_threshold:
-            normal_hours_intervals.append(interval_range)
+        if current_interval:
+            last_start_time, last_end_time = current_interval[-1]
+            if current_time == last_end_time + pd.Timedelta(minutes=10):
+                current_interval[-1][1] = current_time
+            else:
+                current_interval.append([current_time, current_time])
         else:
-            light_hours_intervals.append(interval_range)
+            current_interval.append([current_time, current_time])
 
-    mean_vehicle_count = total_vehicle_count / len(traffic_light_data)
-    mean_pedestrian_count = total_pedestrian_count / len(traffic_light_data)
+    num_records = len(traffic_light_data)
+    mean_vehicle_count = total_vehicle_count / num_records if num_records > 0 else 0
+    mean_pedestrian_count = total_pedestrian_count / num_records if num_records > 0 else 0
 
-    min_time = traffic_light_data['time'].min()
-    max_time = traffic_light_data['time'].max()
+    peak_hours_intervals_str = [[start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')] for start, end in peak_hours_intervals]
+    normal_hours_intervals_str = [[start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')] for start, end in normal_hours_intervals]
+    light_hours_intervals_str = [[start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')] for start, end in light_hours_intervals]
+
+    min_time = traffic_light_data['time'].min().strftime('%Y-%m-%dT%H:%M:%S')
+    max_time = traffic_light_data['time'].max().strftime('%Y-%m-%dT%H:%M:%S')
 
     return {
-        'peak_hours_intervals': [(start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')) for start, end
-                                 in peak_hours_intervals],
-        'normal_hours_intervals': [(start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')) for
-                                   start, end in normal_hours_intervals],
-        'light_hours_intervals': [(start.strftime('%Y-%m-%dT%H:%M:%S'), end.strftime('%Y-%m-%dT%H:%M:%S')) for
-                                  start, end in light_hours_intervals],
+        'peak_hours_intervals': peak_hours_intervals_str,
+        'normal_hours_intervals': normal_hours_intervals_str,
+        'light_hours_intervals': light_hours_intervals_str,
         'mean_vehicle_count': mean_vehicle_count,
         'mean_pedestrian_count': mean_pedestrian_count,
         'time_min': min_time,
@@ -144,7 +133,7 @@ def calculate_statistics(traffic_light_data):
 def update_statistics():
     global df, traffic_statistics_cache
 
-    threading.Timer(10, update_statistics).start()
+    threading.Timer(20, update_statistics).start()
 
     with lock:
         stats = df.groupby('traffic_light_id').apply(calculate_statistics)
@@ -194,6 +183,8 @@ def update_statistics():
                     )
 
             conn.commit()
+
+            print("Updating Statistics...\n")
         except Exception as e:
             conn.rollback()
             print(f"Error updating statistics: {e}")
@@ -241,6 +232,8 @@ def update_models():
 
     with lock:
         models_by_intersection = new_models
+
+    print("Updating Predictions...\n")
 
     threading.Timer(20, update_models).start()
 

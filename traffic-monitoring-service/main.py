@@ -138,19 +138,19 @@ while True:
 
         print(traffic_data)
 
-        url = "http://localhost:8000/add_new_data"
+        url = "http://localhost:8000/add_traffic_record"
         response = requests.post(url, json=traffic_data)
 
         if response.status_code == 200:
-            print("Data successfully sent to the server.")
+            print("Data successfully sent to the server1.")
         else:
             print("Failed to send data. Status code:", response.status_code)
 
-        url = "http://localhost:7000/update_traffic_data"
+        url = "http://localhost:7000/add_traffic_record"
         response = requests.post(url, json=traffic_data)
 
         if response.status_code == 200:
-            print("Data successfully sent to the server.")
+            print("Data successfully sent to the server1.")
         else:
             print("Failed to send data. Status code:", response.status_code)
 

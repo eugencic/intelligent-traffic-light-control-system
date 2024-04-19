@@ -4,11 +4,13 @@ from app.core import *
 from app.database.db import *
 
 app = Flask(__name__)
-lock = threading.Lock()
+cache_lock = threading.Lock()
+frame_lock = threading.Lock()
+statistics_lock = threading.Lock()
 
 
 @app.route('/add_traffic_record', methods=['POST'])
-def add__new_data():
+def add_traffic_record():
     data = request.json
 
     conn = get_connection_from_pool()
@@ -31,10 +33,12 @@ def add__new_data():
                 "traffic_light_id": record['traffic_light_id']
             }
 
-            with lock:
+            with cache_lock:
                 traffic_records_cache.append(traffic_record)
 
-        with lock:
+        print(f"New Real Time Data - Intersection {record['traffic_light_id']}\n")
+
+        with frame_lock:
             update_frame(data)
 
         return jsonify({'message': 'Data added successfully'}), 200
@@ -49,7 +53,7 @@ def add__new_data():
 
 @app.route('/get_statistics/<int:traffic_light_id>', methods=['GET'])
 def get_statistics(traffic_light_id):
-    with lock:
+    with statistics_lock:
         if traffic_light_id in traffic_statistics_cache:
             statistics = traffic_statistics_cache[traffic_light_id]
 
@@ -80,9 +84,8 @@ def predict_vehicle(traffic_light_id):
                     'predicted_vehicle_count': prediction}), 200
 
 
-if __name__ == '__main__':
+def start_background_threads():
     setup_database()
-    generate_mockup_data()
     insert_sample_data()
     update_cache()
     init_frame()
@@ -90,4 +93,9 @@ if __name__ == '__main__':
     df = return_frame()
     train_models_by_intersection(df)
     update_models()
+
+
+if __name__ == '__main__':
+    start_background_threads()
+    print("Starting Traffic Analytics Server...")
     app.run(host="0.0.0.0", port=8000, debug=False)

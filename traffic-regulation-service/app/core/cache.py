@@ -1,6 +1,5 @@
 traffic_analytics_service_address = "http://localhost:8000"
 
-
 traffic_intersection_data = {
     1: {
         "light_hours_intervals": [
@@ -25,6 +24,25 @@ traffic_intersection_data = {
         ],
         "time_max": "2024-03-16T09:30:00",
         "time_min": "2024-03-16T08:50:00"
+    },
+    3: {
+        "light_hours_intervals": [],
+        "mean_pedestrian_count": 10.0,
+        "mean_vehicle_count": 20.6,
+        "normal_hours_intervals": [
+            [
+                "2024-03-16T09:50:00",
+                "2024-03-16T09:50:00"
+            ]
+        ],
+        "peak_hours_intervals": [
+            [
+                "2024-03-16T10:00:00",
+                "2024-03-16T10:30:00"
+            ]
+        ],
+        "time_max": "2024-03-16T10:30:00",
+        "time_min": "2024-03-16T09:50:00"
     }
 }
 
