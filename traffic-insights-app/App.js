@@ -1,16 +1,17 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, Image } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import { Provider } from "react-redux";
+
 import MapScreen from "./screens/MapScreen";
-import MenuScreen from "./screens/MenuScreen";
+import DetailsScreen from "./screens/DetailsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+
 import MapActive from "./assets/resources/icons/MapActive";
 import MapInactive from "./assets/resources/icons/MapInactive";
 import SettingsActive from "./assets/resources/icons/SettingsActive";
 import SettingsInactive from "./assets/resources/icons/SettingsInactive";
-import { Provider } from "react-redux";
+
 import store from "./redux/store";
 
 const Tab = createBottomTabNavigator();
@@ -20,7 +21,7 @@ const MapStack = () => {
   return (
     <Stack.Navigator initialRouteName="MapScreen">
       <Stack.Screen name="MapScreen" component={MapScreen} />
-      <Stack.Screen name="MenuScreen" component={MenuScreen} />
+      <Stack.Screen name="DetailsScreen" component={DetailsScreen} />
     </Stack.Navigator>
   );
 };

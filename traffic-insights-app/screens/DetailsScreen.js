@@ -1,18 +1,19 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
-  View,
-  Text,
+  Dimensions,
   SafeAreaView,
   StyleSheet,
-  Dimensions,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+
 import { fetchIntersectionInfo } from "../api/intersectionApi";
 
 const windowWidth = Dimensions.get("window").width;
 
-const MenuScreen = ({ route }) => {
+const DetailsScreen = ({ route }) => {
   const { intersectionId } = route.params;
   const navigation = useNavigation();
   const [intersectionData, setIntersectionData] = useState(null);
@@ -125,7 +126,6 @@ const MenuScreen = ({ route }) => {
               <Text style={styles.sectionTitle}>Tomorrow's Predictions</Text>
               <Text style={styles.label}>
                 Time: {currentTime}{" "}
-                {/* Display current time instead of predicted time */}
               </Text>
               <Text style={styles.label}>
                 Vehicle Count:{" "}
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ECEFF1", // Light blue-gray background color
+    backgroundColor: "#ECEFF1",
   },
   content: {
     flex: 1,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   section: {
-    backgroundColor: "#FFFFFF", // White section background
+    backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
@@ -188,17 +188,17 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   button: {
-    backgroundColor: "#FF5722", // Orange button color
+    backgroundColor: "#234635",
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 25,
     marginTop: 20,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#FFFFFF", // White text color
+    color: "#FFFFFF",
   },
 });
 
-export default MenuScreen;
+export default DetailsScreen;

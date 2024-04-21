@@ -4,9 +4,9 @@ const initialState = {
   intersections: {},
 };
 
-const intersection = createSlice({
+const intersectionSlice = createSlice({
     name: "intersection",
     initialState
 });
 
-export default intersection.reducer;
+export default intersectionSlice.reducer;

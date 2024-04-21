@@ -9,6 +9,37 @@ frame_lock = threading.Lock()
 statistics_lock = threading.Lock()
 
 
+@app.route('/get_traffic_lights', methods=['GET'])
+def get_traffic_lights():
+    conn = get_connection_from_pool()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT id, location AS name, latitude, longitude, address FROM TrafficLights;"
+        )
+        traffic_lights = cursor.fetchall()
+
+        # Construct JSON response in the required format
+        traffic_lights_data = [
+            {
+                'id': light[0],
+                'name': light[1],
+                'latitude': light[2],
+                'longitude': light[3],
+                'address': light[4]
+            }
+            for light in traffic_lights
+        ]
+
+        return jsonify(traffic_lights_data), 200
+    except psycopg2.Error as e:
+        return jsonify({'error': f'Failed to fetch traffic lights data: {str(e)}'}), 500
+    finally:
+        cursor.close()
+        return_connection_to_pool(conn)
+
+
 @app.route('/add_traffic_record', methods=['POST'])
 def add_traffic_record():
     data = request.json

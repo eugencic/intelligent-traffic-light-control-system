@@ -1,22 +1,23 @@
+import { useFonts } from "expo-font";
+import * as Location from "expo-location";
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import {
-  View,
-  Text,
-  SafeAreaView,
-  StyleSheet,
   Dimensions,
-  TextInput,
   Image,
   Modal,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableHighlight,
-  Platform
+  View,
 } from "react-native";
-import * as Location from "expo-location";
-import SafeViewAndroid from "../components/SafeViewAndroid";
 import MapView, { Marker } from "react-native-maps";
+import SafeViewAndroid from "../components/SafeViewAndroid";
+
+import { fetchIntersectionData } from "../api/intersectionApi";
 import MagnifyingGlass from "./../assets/resources/icons/MagnifyingGlass";
-import { useFonts } from "expo-font";
-import { mockupRestaurants, mockupTrafficLights } from "./../database/mockupData";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -39,7 +40,7 @@ const MapScreen = ({ navigation }) => {
   const [selectedTrafficLight, setSelectedTrafficLight] = useState(null);
 
   useEffect(() => {
-    const getLocation = async () => {
+    const getLocationAndTrafficLights = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.log("Permission to access location was denied");
@@ -62,12 +63,14 @@ const MapScreen = ({ navigation }) => {
         longitudeDelta: 0.005,
       });
 
-      setTrafficLights(mockupTrafficLights);
-      setFilteredTrafficLights(mockupTrafficLights);
+      const data = await fetchIntersectionData();
+
+      setTrafficLights(data);
+      setFilteredTrafficLights(data);
       setIsLoading(false);
     };
 
-    getLocation();
+    getLocationAndTrafficLights();
   }, []);
 
   const reverseGeocode = async (latitude, longitude) => {
@@ -122,19 +125,6 @@ const MapScreen = ({ navigation }) => {
           source={require("./../assets/resources/images/map-pin.png")}
           style={styles.markerImage}
         />
-        {/* {selectedMarker === restaurant.id ? (
-          <View style={styles.selectedMarkerContainer}>
-            <Image
-              source={require("./../assets/resources/images/granier.png")}
-              style={styles.selectedMarkerImage}
-            />
-          </View>
-        ) : (
-          <Image
-            source={require("./../assets/resources/images/map-pin.png")}
-            style={styles.markerImage}
-          />
-        )} */}
       </Marker>
     ));
   };
@@ -248,7 +238,7 @@ const MapScreen = ({ navigation }) => {
             <TouchableHighlight
               style={{ ...styles.openButton, backgroundColor: "#234635" }}
               onPress={() => {
-                navigation.navigate("MenuScreen", {
+                navigation.navigate("DetailsScreen", {
                   intersectionId: selectedTrafficLight,
                   distance: distanceDisplay,
                 });

@@ -28,7 +28,10 @@ def setup_database():
     create_traffic_light_table = """
         CREATE TABLE IF NOT EXISTS TrafficLights (
             id SERIAL PRIMARY KEY,
-            location VARCHAR(255)
+            location VARCHAR(255),
+            latitude FLOAT,
+            longitude FLOAT,
+            address VARCHAR(255)
         );
     """
 
@@ -77,9 +80,24 @@ def setup_database():
 
 
 sample_traffic_lights = [
-    {"location": "Intersection 1"},
-    {"location": "Intersection 2"},
-    {"location": "Intersection 3"}
+    {
+        "name": "Intersection 1",
+        "latitude": 46.97520,
+        "longitude": 28.87343,
+        "address": "Str. Valea Crucii"
+    },
+    {
+        "name": "Intersection 2",
+        "latitude": 46.97867,
+        "longitude": 28.86791,
+        "address": "Str. Burebista"
+    },
+    {
+        "name": "Intersection 3",
+        "latitude": 37.4224514532131,
+        "longitude": -122.08449885026891,
+        "address": "123 Main St, Cityville"
+    },
 ]
 
 sample_traffic_records = [
@@ -107,7 +125,11 @@ def insert_sample_data():
 
     try:
         for light in sample_traffic_lights:
-            cursor.execute("INSERT INTO TrafficLights (location) VALUES (%s) RETURNING id;", (light['location'],))
+            cursor.execute(
+                "INSERT INTO TrafficLights (location, latitude, longitude, address) "
+                "VALUES (%s, %s, %s, %s) RETURNING id;",
+                (light['name'], light['latitude'], light['longitude'], light['address'])
+            )
 
             traffic_light_id = cursor.fetchone()[0]
 

@@ -2,6 +2,12 @@
 
 ## Endpoints:
 
+- Get data of traffic intersections:
+
+  ```
+  GET "http://localhost:8000/get_traffic_lights"
+  ```
+  
 - Add traffic record for an intersection:
 
   ```
