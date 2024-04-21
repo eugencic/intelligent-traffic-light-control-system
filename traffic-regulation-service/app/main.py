@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
 
 from app.core.rules import *
 from app.core.statistics import *
 from app.core.utils import *
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/add_traffic_record", methods=["POST"])
@@ -28,6 +30,7 @@ def add_traffic_record():
 
 
 @app.route("/get_traffic_rules/<int:intersection_id>", methods=["GET"])
+@cross_origin()
 def get_traffic_rules(intersection_id):
     try:
         traffic_stats = traffic_intersection_data.get(intersection_id)
