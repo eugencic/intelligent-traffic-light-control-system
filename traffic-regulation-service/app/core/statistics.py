@@ -2,7 +2,7 @@ import requests
 import threading
 import time
 
-from app.core.cache import *
+from core.cache import *
 
 lock = threading.Lock()
 

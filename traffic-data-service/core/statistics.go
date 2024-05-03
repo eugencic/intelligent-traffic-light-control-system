@@ -7,7 +7,8 @@ import (
 )
 
 func GetStatistics(intersectionID int) (StatisticsResponse, error) {
-	statisticsURL := fmt.Sprintf("http://localhost:8000/get_statistics/%d", intersectionID)
+	//statisticsURL := fmt.Sprintf("http://localhost:8000/get_statistics/%d", intersectionID)
+	statisticsURL := fmt.Sprintf("http://traffic-analytics-service:8000/get_statistics/%d", intersectionID)
 	resp, err := http.Get(statisticsURL)
 	if err != nil {
 		return StatisticsResponse{}, err

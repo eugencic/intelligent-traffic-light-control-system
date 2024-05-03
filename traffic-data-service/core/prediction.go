@@ -9,7 +9,9 @@ import (
 
 func GetPrediction(intersectionID int) (PredictionResponse, error) {
 	currentTime := time.Now()
-	predictionsURL := fmt.Sprintf("http://localhost:8000/get_predictions/%d?hour=%d&minute=%d",
+	//predictionsURL := fmt.Sprintf("http://localhost:8000/get_predictions/%d?hour=%d&minute=%d",
+	//	intersectionID, currentTime.Hour(), currentTime.Minute())
+	predictionsURL := fmt.Sprintf("http://traffic-analytics-service:8000/get_predictions/%d?hour=%d&minute=%d",
 		intersectionID, currentTime.Hour(), currentTime.Minute())
 
 	resp, err := http.Get(predictionsURL)

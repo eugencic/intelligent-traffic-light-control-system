@@ -8,8 +8,7 @@ import time
 from ultralytics import YOLO
 
 
-traffic_analytics_service_url = "http://localhost:8000/add_traffic_record"
-traffic_regulation_service_url = "http://localhost:7000/add_traffic_record"
+gateway_url = "http://localhost:5000/gateway/add_traffic_record"
 
 # webcam source
 # cap = cv2.VideoCapture(0)
@@ -143,26 +142,14 @@ while True:
         print("Sending new traffic data...", traffic_data)
 
         try:
-            response = requests.post(traffic_analytics_service_url, json=traffic_data)
+            response = requests.post(gateway_url, json=traffic_data)
 
             if response.status_code == 200:
-                print("Data successfully sent to Traffic Analytics Server")
+                print("Data successfully sent")
             else:
-                print("Failed to send data to Traffic Analytics Server. Status code:", response.status_code)
-
+                print("Failed to send data. Status code:", response.status_code)
         except requests.exceptions.RequestException as e:
-            print("Error occurred while sending data to Traffic Analytics Server:", e)
-
-        try:
-            response = requests.post(traffic_regulation_service_url, json=traffic_data)
-
-            if response.status_code == 200:
-                print("Data successfully sent to the Traffic Regulation Server")
-            else:
-                print("Failed to send data to Traffic Regulation Server. Status code:", response.status_code)
-
-        except requests.exceptions.RequestException as e:
-            print("Error occurred while sending data to Traffic Regulation Server:", e)
+            print("Error occurred while sending data:", e)
 
         start_time = time.time()
 

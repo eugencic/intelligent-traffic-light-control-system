@@ -1,7 +1,7 @@
 from datetime import datetime
 import threading
 
-from app.core.cache import *
+from core.cache import *
 
 lock = threading.Lock()
 

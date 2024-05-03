@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 
-from app.core import *
-from app.database.db import *
+from core import *
+from database.db import *
 
 app = Flask(__name__)
 cache_lock = threading.Lock()

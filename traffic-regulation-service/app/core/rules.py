@@ -1,6 +1,6 @@
 import time
 
-from app.core.utils import *
+from core.utils import *
 
 
 def update_traffic_light_rules(intersection_id):

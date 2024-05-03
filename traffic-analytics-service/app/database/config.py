@@ -3,6 +3,7 @@ class Config:
         'dbname': 'traffic-analytics',
         'user': 'postgres',
         'password': '111111',
-        'host': 'localhost',
-        'port': '5433'
+        'host': 'traffic-analytics-database'
+        # 'host': 'localhost',
+        # 'port': '5433'
     }

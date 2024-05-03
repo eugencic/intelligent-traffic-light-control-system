@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway
+    environment:
+      - SERVICE_NAME=gateway
+    ports:
+      - "5000:5000"
+    restart: always
+    networks:
+      - mynetwork
+
   traffic-analytics-database:
     container_name: traffic-analytics-database
     image: postgres:latest
@@ -14,18 +26,74 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
-  traffic-regulation-database:
-    container_name: traffic-regulation-database
-    image: postgres:latest
-    ports:
-      - "5434:5432"
+    networks:
+      - mynetwork
+
+  traffic-analytics-service:
+    container_name: traffic-analytics-service
+    build:
+      context: ./traffic-analytics-service
     environment:
-      POSTGRES_PASSWORD: 111111
-      POSTGRES_DB: traffic-regulation
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 15s
-      timeout: 10s
-      retries: 5
+      - SERVICE_NAME=traffic-analytics-service
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      traffic-analytics-database:
+        condition: service_healthy
+      gateway:
+        condition: service_started
+    networks:
+      - mynetwork
+
+  traffic-regulation-service:
+    container_name: traffic-regulation-service
+    build:
+      context: ./traffic-regulation-service
+    environment:
+      - SERVICE_NAME=traffic-regulation-service
+    ports:
+      - "7000:7000"
+    restart: always
+    depends_on:
+      traffic-analytics-service:
+        condition: service_started
+      gateway:
+        condition: service_started
+    networks:
+      - mynetwork
+
+  traffic-data-service:
+    container_name: traffic-data-service
+    build:
+      context: ./traffic-data-service
+    environment:
+      - SERVICE_NAME=traffic-data-service
+    ports:
+      - "6000:6000"
+    restart: always
+    depends_on:
+      traffic-analytics-service:
+        condition: service_started
+      gateway:
+        condition: service_started
+    networks:
+      - mynetwork
+
+#  traffic-monitoring-service:
+#    container_name: traffic-monitoring-service
+#    build:
+#      context: ./traffic-monitoring-service
+#    environment:
+#      - SERVICE_NAME=traffic-monitoring-service
+#    depends_on:
+#      traffic-analytics-service:
+#        condition: service_started
+#      traffic-regulation-service:
+#        condition: service_started
 #    networks:
 #      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

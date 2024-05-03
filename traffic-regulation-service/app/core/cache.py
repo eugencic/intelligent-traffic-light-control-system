@@ -1,4 +1,5 @@
-traffic_analytics_service_address = "http://localhost:8000"
+# traffic_analytics_service_address = "http://localhost:8000"
+traffic_analytics_service_address = "http://traffic-analytics-service:8000"
 
 traffic_intersection_data = {
     1: {

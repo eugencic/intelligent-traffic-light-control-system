@@ -1,0 +1,11 @@
+cvzone==1.6.1
+filterpy==1.4.5
+lap==0.4.0
+matplotlib==3.8.4
+numpy==1.26.4
+# opencv-python==4.9.0.80
+opencv-python-headless
+requests==2.31.0
+scipy==1.13.0
+scikit-image~=0.22.0
+ultralytics~=8.0.202

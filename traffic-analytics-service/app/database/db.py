@@ -1,7 +1,7 @@
 import psycopg2
 import psycopg2.pool
 
-from app.database.config import Config
+from database.config import Config
 
 db_pool = psycopg2.pool.SimpleConnectionPool(
     minconn=1,

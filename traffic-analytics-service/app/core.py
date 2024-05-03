@@ -3,11 +3,10 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import threading
 
-from app.database.db import get_connection_from_pool, return_connection_to_pool
+from database.db import get_connection_from_pool, return_connection_to_pool
 
 lock = threading.Lock()
 
