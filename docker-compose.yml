@@ -80,20 +80,6 @@ services:
     networks:
       - mynetwork
 
-#  traffic-monitoring-service:
-#    container_name: traffic-monitoring-service
-#    build:
-#      context: ./traffic-monitoring-service
-#    environment:
-#      - SERVICE_NAME=traffic-monitoring-service
-#    depends_on:
-#      traffic-analytics-service:
-#        condition: service_started
-#      traffic-regulation-service:
-#        condition: service_started
-#    networks:
-#      - mynetwork
-
 networks:
   mynetwork:
     driver: bridge
