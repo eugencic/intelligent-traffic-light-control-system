@@ -6,8 +6,8 @@ import Reducer from "./reducres/Trafficlight";
 function App() {
   const [trafficlights] = useReducer(Reducer, Data);
   const [trafficlightIndex, setTrafficlightIndex] = useState(0);
-  const [redDuration, setRedDuration] = useState(1);
-  const [greenDuration, setGreenDuration] = useState(30);
+  const [redDuration, setRedDuration] = useState(20); // Initial values
+  const [greenDuration, setGreenDuration] = useState(30); // Initial values
   const [timeRemaining, setTimeRemaining] = useState(redDuration);
 
   useEffect(() => {
@@ -22,23 +22,28 @@ function App() {
         const data = await response.json();
         console.log("Fetched traffic rules:", data);
 
+        // Update durations if they are different from the current ones
         if (
           data.red_duration !== redDuration ||
           data.green_duration !== greenDuration
         ) {
           setRedDuration(data.red_duration);
           setGreenDuration(data.green_duration);
+          // If the current traffic light is green, update time remaining
+          if (trafficlightIndex === 1) {
+            setTimeRemaining(data.green_duration);
+          }
         }
       } catch (error) {
         console.error("Error fetching traffic rules:", error);
       }
     };
 
-    fetchTrafficRules();
+    // Fetch traffic rules every 20 seconds
     const interval = setInterval(fetchTrafficRules, 5000);
 
     return () => clearInterval(interval);
-  }, [redDuration, greenDuration]);
+  }, [redDuration, greenDuration, trafficlightIndex]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -55,7 +60,13 @@ function App() {
     return () => {
       clearTimeout(timer);
     };
-  }, [trafficlightIndex, redDuration, greenDuration, trafficlights]);
+  }, [
+    trafficlightIndex,
+    redDuration,
+    greenDuration,
+    trafficlights,
+    timeRemaining,
+  ]);
 
   return (
     <Fragment>
@@ -77,9 +88,7 @@ function App() {
                 ></p>
                 <p className="timer">
                   {trafficlightIndex === trafficlight.id &&
-                    (trafficlight.id === 0
-                      ? `${timeRemaining} s`
-                      : `${timeRemaining} s`)}{" "}
+                    `${timeRemaining} s`}
                 </p>
               </div>
             ))}
