@@ -1,15 +1,7 @@
 import axios from "axios";
 
-const API_TRAFFIC_DATA_URL = "http://192.168.1.101:8000";
-const API_TRAFFIC_INFO_URL = "http://192.168.1.101:9000";
-
-// const API_TRAFFIC_DATA_URL = "http://192.168.0.2:8000";
-// const API_TRAFFIC_INFO_URL = "http://192.168.0.2:9000";
-// const API_TRAFFIC_DATA_URL = "http://192.168.2.35:8000";
-// const API_TRAFFIC_INFO_URL = "http://192.168.2.35:9000";
-
-// const API_TRAFFIC_DATA_URL = "http://172.20.10.6:8000";
-// const API_TRAFFIC_INFO_URL = "http://172.20.10.6:9000";
+// const API_TRAFFIC_DATA_URL = "http://IPv4Address:8000";
+// const API_TRAFFIC_INFO_URL = "http://IPv4Address:6000";
 
 export const fetchIntersectionData = async () => {
   try {
