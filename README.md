@@ -26,7 +26,7 @@ $ python main.py
 
 ### Traffic Light Simulator
 
-Before running the simulator, install [npm](https://www.npmjs.com/) on the device, and set up the `node_modules`. 
+Before running the simulator, install [npm](https://www.npmjs.com/) on the device, and set up `node_modules`. 
 
 Make sure the main application is already running.
 
@@ -38,14 +38,12 @@ $ npm start
 
 ### Traffic Insights App
 
-Before running the application, follow these steps:
+Before running the application, install [npm](https://www.npmjs.com/) on the device, and set up [Expo](https://docs.expo.dev/tutorial/create-your-first-app/).
 
-1. Make sure the main application is already running
-2. Install [npm](https://www.npmjs.com/) on the device
-3. Set up [Expo](https://docs.expo.dev/tutorial/create-your-first-app/)
-4. Install [Expo Go](https://expo.dev/go) on a physical device
-5. Find `api/intersectionApi.js` in the root folder and add your local IPv4 Address to `API_TRAFFIC_DATA_URL`
+Find `api/intersectionApi.js` in the root folder and add your local IPv4 Address to `API_TRAFFIC_DATA_URL`
 and `API_TRAFFIC_INFO_URL` constants.
+
+Make sure the main application is already running.
 
 Type this command in the root folder:
 
@@ -53,3 +51,4 @@ Type this command in the root folder:
 $ npm start
 ```
 
+Install [Expo Go](https://expo.dev/go) and run the application on mobile.
