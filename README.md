@@ -16,6 +16,8 @@ $ docker compose up --build
 
 Before running the service, install the packages from `requirements.txt`. 
 
+Download `intersection.mp4` video [here](https://youtu.be/byFwUdBuZB4), and move it to `resources` folder. 
+
 Make sure the main application is already running.
 
 Type this command in the root folder:
